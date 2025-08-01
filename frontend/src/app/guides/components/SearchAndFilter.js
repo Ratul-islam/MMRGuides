@@ -162,7 +162,7 @@ const SearchAndFilters = ({
               <span> in <span className="font-bold text-indigo-600">{formatTagForDisplay(activeFilter)}</span></span>
             )}
             {searchTerm && (
-              <span> matching "<span className="font-bold text-indigo-600">{searchTerm}</span>"</span>
+              <span> matching &quot;<span className="font-bold text-indigo-600">{searchTerm}</span>&quot;</span>
             )}
           </p>
         </motion.div>

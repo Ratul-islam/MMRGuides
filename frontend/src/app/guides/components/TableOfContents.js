@@ -9,7 +9,6 @@ export default function TableOfContents({ content }) {
   const [activeId, setActiveId] = useState('')
 
   useEffect(() => {
-    // Extract headings from markdown content
     const headingRegex = /^(#{1,3})\s+(.+)$/gm
     const extractedHeadings = []
     let match
@@ -44,7 +43,6 @@ export default function TableOfContents({ content }) {
       }
     )
 
-    // Observe all headings in the document
     headings.forEach(({ id }) => {
       const element = document.getElementById(id)
       if (element) {

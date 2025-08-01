@@ -140,14 +140,14 @@ const HeroSection = () => {
                 
                 {/* Animated Code */}
                 <div className="space-y-2 mb-6">
-                  <div className="text-purple-400">// Modern Web Development</div>
+                  <div className="text-purple-400">Modern Web Development</div>
                   <div className="text-blue-400">
                     <span className={`${isTyping ? 'animate-pulse' : ''}`}>
                       {codeSnippets[currentCode]}
                       <span className="animate-pulse">|</span>
                     </span>
                   </div>
-                  <div className="text-gray-500">    // Building amazing apps</div>
+                  <div className="text-gray-500">    {'//'} Building amazing apps</div>
                   <div className="text-yellow-400">    export default App;</div>
                 </div>
 

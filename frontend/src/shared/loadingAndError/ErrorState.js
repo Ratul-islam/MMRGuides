@@ -7,6 +7,7 @@ import {
   ChatBubbleLeftRightIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 const ErrorState = ({ 
   error, 
@@ -208,7 +209,7 @@ const ErrorState = ({
           <h3 className="font-semibold text-blue-900 mb-2">Need immediate help?</h3>
           <p className="text-blue-700 text-sm">
             If this error persists, please contact our support team with the error details above. 
-            We're here to help you get back to learning!
+            We&apos;re here to help you get back to learning!
           </p>
         </motion.div>
 
@@ -236,12 +237,12 @@ const ErrorState = ({
             🗑️ Clear Cache
           </button>
           
-          <a
+          <Link
             href="/guides"
             className="text-indigo-600 hover:text-indigo-700 font-medium underline underline-offset-2 hover:no-underline transition-all"
           >
             📚 Browse All Guides
-          </a>
+          </Link>
           
           <a
             href="/status"
