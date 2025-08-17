@@ -4,11 +4,10 @@ import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import cloudinary from '../../config/cloudinary.js'; 
 const uploadRouter = Router();
 
-// Configure Cloudinary storage
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'blog-images', // Cloudinary folder name
+    folder: 'blog-images',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
     transformation: [
       { 
@@ -20,7 +19,6 @@ const storage = new CloudinaryStorage({
       }
     ],
     public_id: (req, file) => {
-      // Generate unique filename
       const timestamp = Date.now();
       const random = Math.round(Math.random() * 1E9);
       return `blog-${timestamp}-${random}`;
@@ -31,7 +29,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit (Cloudinary can handle larger files)
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter: function (req, file, cb) {
     // Check file type
@@ -47,7 +45,6 @@ const upload = multer({
   }
 });
 
-// Single image upload
 uploadRouter.post('/image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -57,10 +54,9 @@ uploadRouter.post('/image', upload.single('image'), async (req, res) => {
       });
     }
 
-    // Cloudinary automatically uploads and returns file info
     const imageData = {
-      url: req.file.path, // Cloudinary URL
-      publicId: req.file.filename, // Cloudinary public ID
+      url: req.file.path,
+      publicId: req.file.filename,
       originalName: req.file.originalname,
       size: req.file.size,
       width: req.file.width,
@@ -68,7 +64,7 @@ uploadRouter.post('/image', upload.single('image'), async (req, res) => {
       format: req.file.format,
       resourceType: req.file.resource_type,
       createdAt: new Date().toISOString(),
-      uploadedBy: req.user?.id || 'anonymous' // If you have user authentication
+      uploadedBy: req.user?.id || 'anonymous'
     };
 
     res.json({
@@ -85,7 +81,6 @@ uploadRouter.post('/image', upload.single('image'), async (req, res) => {
   }
 });
 
-// Multiple images upload
 uploadRouter.post('/images', upload.array('images', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -105,7 +100,7 @@ uploadRouter.post('/images', upload.array('images', 10), async (req, res) => {
       format: file.format,
       resourceType: file.resource_type,
       createdAt: new Date().toISOString(),
-      uploadedBy: req.user?.id || 'Ratul-islam'
+      uploadedBy: req.user?.id
     }));
 
     res.json({
@@ -122,12 +117,10 @@ uploadRouter.post('/images', upload.array('images', 10), async (req, res) => {
   }
 });
 
-// Delete image from Cloudinary
 uploadRouter.delete('/image/:publicId', async (req, res) => {
   try {
     const publicId = req.params.publicId;
     
-    // Delete from Cloudinary
     const result = await cloudinary.uploader.destroy(`blog-images/${publicId}`);
     
     if (result.result === 'ok') {

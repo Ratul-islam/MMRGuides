@@ -1,7 +1,7 @@
 import { Router } from "express";
 import userRouter from "../modules/user/route.js";
-import postRouter from "../modules/posts/route.js";
 import uploadRouter from "../modules/upload/route.js";
+import guideRouter from "../modules/posts/route.js";
 
 const router = Router();
 
@@ -11,8 +11,8 @@ const moduleRoutes = [
     route: userRouter,
   },
   {
-    path: "/posts",
-    route: postRouter,
+    path: "/guides",
+    route: guideRouter,
   },
   {
     path: "/upload",

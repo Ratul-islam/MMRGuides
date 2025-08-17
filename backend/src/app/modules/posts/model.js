@@ -1,87 +1,44 @@
-import mongoose from "mongoose"
-import slugify from "slugify"
+import mongoose from "mongoose";
 
-const postSchema = new mongoose.Schema({
+const guideTableRowSchema = new mongoose.Schema({
+  purpose: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Purpose cannot be more than 100 characters']
+  },
+  guide: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Guide cannot be more than 200 characters']
+  },
+  link: {
+    type: String,
+    trim: true,
+    maxlength: [300, 'Link cannot be more than 300 characters']
+  }
+}, { _id: false });
+
+const guideSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Title is required'],
     trim: true,
-    maxlength: [200, 'Title cannot be more than 200 characters']
+    maxlength: [200, 'Title cannot be more than 200 characters'],
+    default: ''
   },
-  slug: {
+  description: {
     type: String,
-    unique: true,
-    lowercase: true
+    maxlength: [500, 'Description cannot be more than 500 characters'],
+    default: ''
   },
-  content: {
-    type: String,
-    required: [true, 'Content is required']
-  },
-  excerpt: {
-    type: String,
-    maxlength: [500, 'Excerpt cannot be more than 500 characters']
-  },
-  featuredImage: {
-    type: String,
-    default: null
-  },
-  published: {
-    type: Boolean,
-    default: false
-  },
-  publishedAt: {
-    type: Date,
-    default: null
-  },
-  tags: [{
-    type: String,
-    trim: true,
-    lowercase: true
-  }],
-  views: {
-    type: Number,
-    default: 0
+  rows: {
+    type: [guideTableRowSchema],
+    required: true,
+    validate: [arr => Array.isArray(arr) && arr.length > 0, 'At least one row is required']
   }
 }, {
   timestamps: true
 });
 
-// Generate slug before saving
-postSchema.pre('save', function(next) {
-  if (!this.isModified('title')) return next();
-  
-  this.slug = slugify(this.title, {
-    lower: true,
-    strict: true,
-    remove: /[*+~.()'"!:@]/g
-  });
-  
-  next();
-});
+const GuideModel = mongoose.models.Guide || mongoose.model("Guide", guideSchema);
 
-// Set publishedAt when published
-postSchema.pre('save', function(next) {
-  if (this.isModified('published') && this.published && !this.publishedAt) {
-    this.publishedAt = new Date();
-  }
-  next();
-});
-
-// Ensure unique slug
-postSchema.pre('save', async function(next) {
-  if (!this.isModified('title')) return next();
-  
-  let slug = this.slug;
-  let counter = 1;
-  
-  while (await this.constructor.findOne({ slug, _id: { $ne: this._id } })) {
-    slug = `${this.slug}-${counter}`;
-    counter++;
-  }
-  
-  this.slug = slug;
-  next();
-});
-const PostModel = mongoose.model("Post", postSchema);
-
-export default PostModel;
+export default GuideModel;
