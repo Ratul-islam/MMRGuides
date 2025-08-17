@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react'
-import BlogEditor from '../../../../(dashboard)/dashboard/components/dashboard/BlogEditor'
+import BlogEditor from '../../components/dashboard/BlogEditor'
 
 const page = () => {
   return (

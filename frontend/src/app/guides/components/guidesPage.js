@@ -1,186 +1,137 @@
-"use client"
-import { useState, useEffect, useMemo, useCallback } from 'react';
+"use client";
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import publicAxios from '../../../lib/publicApi';
 
+const LoadingState = () => (
+  <div className="flex items-center justify-center min-h-[200px]">
+    <span className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></span>
+    <span className="ml-3 text-gray-600">Loading guides...</span>
+  </div>
+);
 
-import SearchAndFilters from './SearchAndFilter';
-import GuidesGrid from './GuidesGrid';
-import LoadingState from '../../../shared/loadingAndError/LoadingState';
-import EmptyState from '../../../shared/loadingAndError/ErrorState';
-import Pagination from '../../../shared/pagination/pagination';
+const EmptyState = () => (
+  <div className="text-center py-12">
+    <div className="text-4xl mb-4">📝</div>
+    <h3 className="text-lg font-semibold text-gray-900 mb-2">No guides found</h3>
+    <p className="text-gray-600">No guides available yet.</p>
+  </div>
+);
 
-// Hooks
-import { useDebounce } from '../../../hooks/useDebounce';
-import { useLocalStorage } from '../../../hooks/useLocalStorage';
-
-// Utils
-import { getCategories, filterAndSortGuides } from '../../../lib/guidUtils';
+const GuideCard = ({ guide, onVisit }) => (
+  <div
+    className="group bg-white border border-gray-200 rounded-xl px-6 py-5 mb-6 flex flex-col md:flex-row md:items-center md:justify-between shadow transition-shadow hover:shadow-md"
+  >
+    <div>
+      <div className="font-semibold text-lg text-gray-900 mb-1 group-hover:text-blue-600 transition">{guide.title}</div>
+      {guide.description && (
+        <div className="text-gray-600 text-sm line-clamp-2 max-w-xl">{guide.description}</div>
+      )}
+    </div>
+    <div className="mt-4 md:mt-0 md:ml-10 flex-shrink-0">
+      <button
+        className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 text-white text-sm font-medium rounded-lg shadow-sm transition"
+        onClick={() => onVisit(guide._id)}
+        type="button"
+        aria-label={`Visit ${guide.title}`}
+      >
+        Visit
+        <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </button>
+    </div>
+  </div>
+);
 
 const GuidesPage = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  // State management
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
-  
-  // Filters and search
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-  const [activeFilter, setActiveFilter] = useState(searchParams.get('category') || 'All');
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
-  const [viewMode, setViewMode] = useLocalStorage('guidesViewMode', 'grid');
-  
-  // Debounced search
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  
-  // Categories from guides
-  const categories = useMemo(() => getCategories(guides), [guides]);
-  
-  // Filtered and sorted guides
-  const filteredAndSortedGuides = useMemo(() => 
-    filterAndSortGuides(guides, debouncedSearchTerm, activeFilter, sortBy),
-    [guides, debouncedSearchTerm, activeFilter, sortBy]
-  );
 
-  // Update URL params when filters change
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (debouncedSearchTerm) params.set('search', debouncedSearchTerm);
-    if (activeFilter !== 'All') params.set('category', activeFilter);
-    if (sortBy !== 'newest') params.set('sort', sortBy);
-    
-    const paramString = params.toString();
-    const newUrl = paramString ? `/guides?${paramString}` : '/guides';
-    
-    if (typeof window !== 'undefined' && window.location.pathname + window.location.search !== newUrl) {
-      router.replace(newUrl, { shallow: true });
-    }
-  }, [debouncedSearchTerm, activeFilter, sortBy, router]);
-
-  // Fetch guides from API
-  const fetchGuides = useCallback(async (page = 1, append = false) => {
+  // Fetch guides
+  const fetchGuides = useCallback(async () => {
     try {
-      if (!append) setLoading(true);
-      else setLoadingMore(true);
-      
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '12',
-        published: 'true'
-      });
-
-      const response = await publicAxios.get(`/posts?${params}`);
-      
-      if (!response.data?.success) {
-        throw new Error('Failed to fetch guides');
-      }
-      
-      const { posts, total, page: currentPage, pages } = response.data.data;
-      const publishedGuides = posts.filter(post => post.published);
-      
-      if (append) {
-        setGuides(prev => [...prev, ...publishedGuides]);
-      } else {
-        setGuides(publishedGuides);
-      }
-      
-      setPagination({ total, page: currentPage, pages });
+      setLoading(true);
+      const response = await publicAxios.get('/guides');
+      if (!response.data?.data) throw new Error('Failed to fetch guides');
+      setGuides(response.data.data);
     } catch (err) {
-      setError(err.message);
-      console.error('Error fetching guides:', err);
+      setError(err.message || 'Error fetching guides');
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
-  }, []);
-
-  // Load more guides
-  const handleLoadMore = useCallback(() => {
-    if (pagination.page < pagination.pages && !loadingMore) {
-      fetchGuides(pagination.page + 1, true);
-    }
-  }, [pagination.page, pagination.pages, loadingMore, fetchGuides]);
-
-  // Reset filters
-  const handleResetFilters = useCallback(() => {
-    setSearchTerm('');
-    setActiveFilter('All');
-    setSortBy('newest');
   }, []);
 
   useEffect(() => {
     fetchGuides();
   }, [fetchGuides]);
 
+  const handleVisit = (id) => {
+    router.push(`/guides/${id}`);
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
+
   if (loading) {
     return (
       <>
         <Head>
-          <title>Development Guides - Loading...</title>
+          <title>Guides - Loading...</title>
         </Head>
         <LoadingState />
       </>
     );
   }
 
+  if (error) {
+    return (
+      <>
+        <Head>
+          <title>Guides - Error</title>
+        </Head>
+        <div className="flex items-center justify-center min-h-[200px] text-red-600">
+          {error}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Head>
-        <title>Development Guides | {guides.length} Expert Tutorials</title>
-        <meta name="description" content={`Browse ${guides.length} comprehensive development guides covering React, JavaScript, Python, AI, and more. Learn from expert tutorials and advance your coding skills.`} />
-        <meta name="keywords" content="development guides, programming tutorials, React, JavaScript, Python, AI, machine learning, web development" />
-        <meta property="og:title" content={`${guides.length} Development Guides | Expert Programming Tutorials`} />
-        <meta property="og:description" content="Comprehensive collection of expert-crafted tutorials covering modern web development, AI, and cutting-edge technologies." />
-        <meta property="og:type" content="website" />
+        <title>Guides | Quick Browse</title>
+        <meta name="description" content={`Browse ${guides.length} guides. Each shows a title, short description, and a visit button.`} />
         <link rel="canonical" href="/guides" />
       </Head>
-      
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        
-        <SearchAndFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          categories={categories}
-          totalResults={filteredAndSortedGuides.length}
-          totalGuides={guides.length}
-        />
+      <main className="min-h-screen bg-gray-50 py-16">
+        <div className="max-w-2xl mx-auto px-4">
+          {/* Back Button */}
+          <button
+            onClick={handleBack}
+            className="mb-6 inline-flex items-center text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-lg px-2 py-1 transition"
+            aria-label="Go back"
+            type="button"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
+          </button>
 
-        {filteredAndSortedGuides.length === 0 ? (
-          <EmptyState
-            searchTerm={debouncedSearchTerm}
-            activeFilter={activeFilter}
-            onResetFilters={handleResetFilters}
-          />
-        ) : (
-          <>
-            <GuidesGrid
-              guides={filteredAndSortedGuides}
-              viewMode={viewMode}
-            />
-            
-            {pagination.pages > 1 && (
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={pagination.pages}
-                onLoadMore={handleLoadMore}
-                loading={loadingMore}
-              />
-            )}
-          </>
-        )}
-
+          <h1 className="text-3xl font-bold text-gray-900 mb-9 tracking-tight">Guides</h1>
+          {guides.length === 0 ? (
+            <EmptyState />
+          ) : (
+            guides.map(guide => (
+              <GuideCard guide={guide} key={guide._id} onVisit={handleVisit} />
+            ))
+          )}
+        </div>
       </main>
     </>
   );

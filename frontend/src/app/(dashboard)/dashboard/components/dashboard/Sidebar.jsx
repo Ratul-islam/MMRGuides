@@ -8,27 +8,20 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Toolbar,
-  Typography,
-  Avatar,
-  Divider,
-  Chip,
   useTheme,
   useMediaQuery,
+  Divider,
 } from '@mui/material'
 import {
-  Dashboard as DashboardIcon,
-  Edit as EditIcon,
   Article as ArticleIcon,
-  Analytics as AnalyticsIcon,
-  Settings as SettingsIcon,
-  Person as PersonIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material'
 import { alpha } from '@mui/material/styles'
 import { useRouter } from 'next/navigation'
+
 const navigation = [
-  { name: 'My Blogs', id: 'dashboard', icon: ArticleIcon, href: '/dashboard' },
-  { name: 'Write Blog', id: 'editor', icon: EditIcon, href: '/dashboard/new/blog' },
+  { name: 'My Guides', id: 'dashboard', icon: ArticleIcon, href: '/dashboard' },
+  { name: 'Add', id: 'editor', icon: EditIcon, href: '/dashboard/new/guide' },
 ]
 
 export default function Sidebar({
@@ -41,55 +34,47 @@ export default function Sidebar({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const router = useRouter()
 
-  const handleNavClick = (hreftring) => {
-    router.push(hreftring)
-    if (isMobile) {
-      handleDrawerToggle()
-    }
+  const handleNavClick = (href) => {
+    router.push(href)
+    if (isMobile) handleDrawerToggle()
   }
 
   const drawer = (
-    <Box sx={{ 
-      height: '100%', 
-      display: 'flex', 
-      flexDirection: 'column',
-      overflow: 'hidden',
-      width: '100%',
-    }}>
-
-      <Divider sx={{ flexShrink: 0 }} />
-
-      <List sx={{ 
-        flexGrow: 1, 
-        px: 1, 
-        py: 1,
-        overflow: 'auto',
-      }}>
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: theme.palette.background.paper,
+        px: 1,
+        py: 2,
+      }}
+    >
+      <List sx={{ flexGrow: 1 }}>
         {navigation.map((item) => (
           <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton
               onClick={() => handleNavClick(item.href)}
+              selected={activeTab === item.id}
               sx={{
                 borderRadius: 2,
-                mx: 1,
                 minHeight: 44,
-                background: activeTab === item.id 
-                  ? `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`
+                px: 2,
+                transition: 'background 0.15s',
+                backgroundColor: activeTab === item.id
+                  ? alpha(theme.palette.primary.main, 0.09)
                   : 'transparent',
-                color: activeTab === item.id ? 'white' : 'inherit',
                 '&:hover': {
-                  background: activeTab === item.id
-                    ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`
-                    : alpha(theme.palette.primary.main, 0.08),
+                  background: alpha(theme.palette.primary.main, 0.15),
                 },
-                transition: 'all 0.2s ease-in-out',
-                transform: activeTab === item.id ? 'scale(1.02)' : 'scale(1)',
               }}
             >
               <ListItemIcon
                 sx={{
-                  color: activeTab === item.id ? 'white' : theme.palette.primary.main,
-                  minWidth: 36,
+                  color: activeTab === item.id
+                    ? theme.palette.primary.main
+                    : theme.palette.grey[600],
+                  minWidth: 34,
                 }}
               >
                 <item.icon fontSize="small" />
@@ -98,32 +83,26 @@ export default function Sidebar({
                 primary={item.name}
                 primaryTypographyProps={{
                   fontWeight: activeTab === item.id ? 600 : 500,
-                  fontSize: '0.9rem',
-                  noWrap: true,
+                  fontSize: '1rem',
+                  color: activeTab === item.id
+                    ? theme.palette.primary.main
+                    : theme.palette.text.primary,
                 }}
               />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
-
-      <Box sx={{ 
-        p: 1.5, 
-        textAlign: 'center', 
-        borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        flexShrink: 0,
-      }}>
-      </Box>
+      <Divider sx={{ mt: 'auto', mb: 0 }} />
     </Box>
   )
 
   return (
     <Box
       component="nav"
-      sx={{ 
-        width: { sm: drawerWidth }, 
+      sx={{
+        width: { sm: drawerWidth },
         flexShrink: { sm: 0 },
-        zIndex: theme.zIndex.drawer,
       }}
     >
       {/* Mobile drawer */}
@@ -131,21 +110,19 @@ export default function Sidebar({
         variant="temporary"
         open={mobileOpen}
         onClose={handleDrawerToggle}
-        ModalProps={{
-          keepMounted: true,
-        }}
+        ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', sm: 'none' },
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
             maxWidth: '85vw',
+            borderRight: `1px solid ${theme.palette.divider}`,
           },
         }}
       >
         {drawer}
       </Drawer>
-      
       {/* Desktop drawer */}
       <Drawer
         variant="permanent"
@@ -154,6 +131,7 @@ export default function Sidebar({
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
+            borderRight: `1px solid ${theme.palette.divider}`,
           },
         }}
         open

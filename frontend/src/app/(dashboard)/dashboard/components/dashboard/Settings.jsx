@@ -97,12 +97,6 @@ export default function Settings() {
                     </Button>
                   </Box>
                   <Box>
-                    <Typography variant="h6" fontWeight="bold">
-                      Ratul Islam
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Content Creator & Developer
-                    </Typography>
                     <Button variant="outlined" size="small" sx={{ mt: 1 }}>
                       Change Picture
                     </Button>
@@ -113,27 +107,8 @@ export default function Settings() {
                 <TextField
                   fullWidth
                   label="Display Name"
-                  defaultValue="Ratul Islam"
+                  defaultValue="Admin"
                   variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  defaultValue="ratul@example.com"
-                  variant="outlined"
-                  type="email"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Bio"
-                  defaultValue="Passionate full-stack developer and technical writer sharing insights about modern web development."
-                  variant="outlined"
-                  multiline
-                  rows={3}
                 />
               </Grid>
             </Grid>

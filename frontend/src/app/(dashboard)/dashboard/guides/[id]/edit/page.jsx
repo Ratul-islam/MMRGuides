@@ -18,20 +18,18 @@ import {
   TableHead,
   TableRow,
   Paper,
+  CircularProgress,
   useTheme,
-  CircularProgress
 } from '@mui/material'
 import { Add as AddIcon, Delete as DeleteIcon, Save as SaveIcon, ArrowBack as BackIcon } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import api from '../../../../../lib/adminApi'
+import { useRouter, useParams } from 'next/navigation'
+import api from '../../../../../../lib/adminApi'
 
-export default function GuideTableEditor() {
+export default function EditGuideTablePage() {
   const theme = useTheme()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const guideId = searchParams.get('id')
-  const isEditing = Boolean(guideId)
+  const { id } = useParams()
 
   // Optional: overall title/desc for the "guide table" (not required)
   const [guideTitle, setGuideTitle] = useState('')
@@ -44,15 +42,15 @@ export default function GuideTableEditor() {
     { purpose: '', guide: '', link: '' }
   ])
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' })
 
-  // Load existing guide if editing
+  // Load guide
   useEffect(() => {
-    if (isEditing && guideId) {
+    if (id) {
       setLoading(true)
-      api.get(`/guides/${guideId}`).then(res => {
+      api.get(`/guides/${id}`).then(res => {
         if (res.data && res.data.data) {
           setGuideTitle(res.data.data.title || '')
           setGuideDesc(res.data.data.description || '')
@@ -63,7 +61,7 @@ export default function GuideTableEditor() {
       }).finally(() => setLoading(false))
     }
     // eslint-disable-next-line
-  }, [isEditing, guideId])
+  }, [id])
 
   const handleRowChange = (idx, field, value) => {
     setRows(r => r.map((row, i) =>
@@ -80,7 +78,6 @@ export default function GuideTableEditor() {
   }
 
   const handleSave = async () => {
-    // Basic validation: at least one non-empty row
     const validRows = rows.filter(r => r.purpose || r.guide || r.link)
     if (validRows.length === 0) {
       setNotification({ open: true, message: 'Please add at least one guide row.', severity: 'warning' })
@@ -93,20 +90,15 @@ export default function GuideTableEditor() {
         description: guideDesc.trim(),
         rows: validRows,
       }
-      let res
-      if (isEditing) {
-        res = await api.put(`/guides/${guideId}`, guideData)
-      } else {
-        res = await api.post('/guides', guideData)
-      }
+      const res = await api.put(`/guides/${id}`, guideData)
       if (res.data?.success) {
-        setNotification({ open: true, message: isEditing ? 'Guide updated!' : 'Guide created!', severity: 'success' })
+        setNotification({ open: true, message: 'Guide updated!', severity: 'success' })
         setTimeout(() => router.push('/dashboard'), 1200)
       } else {
-        setNotification({ open: true, message: 'Failed to save guide', severity: 'error' })
+        setNotification({ open: true, message: 'Failed to update guide', severity: 'error' })
       }
     } catch (e) {
-      setNotification({ open: true, message: 'Failed to save guide', severity: 'error' })
+      setNotification({ open: true, message: 'Failed to update guide', severity: 'error' })
     } finally {
       setSaving(false)
     }
@@ -138,7 +130,7 @@ export default function GuideTableEditor() {
               <BackIcon />
             </IconButton>
             <Typography variant="h6" fontWeight={600}>
-              {isEditing ? 'Edit Guide Table' : 'Create Guide Table'}
+              Edit Guide Table
             </Typography>
           </Stack>
           <Stack spacing={2} mb={3}>
@@ -241,7 +233,7 @@ export default function GuideTableEditor() {
               sx={{ fontWeight: 600, borderRadius: 2, px: 3, textTransform: 'none' }}
               size="large"
             >
-              {saving ? 'Saving...' : isEditing ? 'Update Guide Table' : 'Save Guide Table'}
+              {saving ? 'Saving...' : 'Update Guide Table'}
             </Button>
           </Stack>
         </CardContent>
